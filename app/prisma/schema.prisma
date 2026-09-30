@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum StructureType {
+  TECHO_UN_AGUA
+}
+
+model Project {
+  id                      String        @id @default(cuid())
+  name                    String
+  client                  String        @default("")
+  notes                   String        @default("")
+  structureType           StructureType @default(TECHO_UN_AGUA)
+  approximateMeasurements Boolean       @default(true)
+  schemaVersion           Int           @default(1)
+  definition              Json
+  duplicatedFromId        String?
+  duplicatedFrom          Project?      @relation("ProjectCopies", fields: [duplicatedFromId], references: [id], onDelete: SetNull)
+  copies                  Project[]     @relation("ProjectCopies")
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([updatedAt])
+  @@index([schemaVersion])
+}

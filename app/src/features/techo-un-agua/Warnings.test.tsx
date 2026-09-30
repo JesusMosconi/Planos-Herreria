@@ -1,0 +1,2 @@
+// @vitest-environment jsdom
+import{render,screen}from"@testing-library/react";import{expect,it}from"vitest";import{Warnings}from"./Warnings";it("announces nonblocking warnings",()=>{render(<><Warnings warnings={[{code:"X",path:"parameters.widthMm",message:"Confirmá la medida.",severity:"warning"}]}/><button>Guardar</button></>);expect(screen.getByText("Confirmá la medida.")).toBeInTheDocument();expect(screen.getByRole("button",{name:"Guardar"})).toBeEnabled();});

@@ -1,0 +1,4 @@
+import makerjs from "makerjs"; import type { TechnicalDrawing } from "@/core/model/types"; import { toMakerModel } from "@/core/drawing/maker-adapter";
+const escape=(value:string)=>value.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+export function exportSvg(drawing:TechnicalDrawing):string { const body=makerjs.exporter.toSVG(toMakerModel(drawing),{useSvgPathOnly:false}); const labels=drawing.texts.map(t=>`<text data-layer="${t.layer}" x="${t.at[0]}" y="${t.at[1]}">${escape(t.text)}</text>`).join(""); const notice=drawing.approximateLabel?`<text data-layer="textos" x="0" y="${drawing.heightMm+350}">${escape(drawing.approximateLabel)}</text>`:""; return body.replace("</svg>",`${labels}${notice}</svg>`); }
+export function exportDxf(drawing:TechnicalDrawing):string { const dxf=makerjs.exporter.toDXF(toMakerModel(drawing),{units:makerjs.unitType.Millimeter}); return drawing.approximateLabel?`${dxf}\n999\n${drawing.approximateLabel}\n`:dxf; }

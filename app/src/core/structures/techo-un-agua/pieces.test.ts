@@ -1,0 +1,3 @@
+import { expect,it } from "vitest"; import { DEFAULT_PROJECT_DEFINITION } from "./model"; import { createRoofPieces } from "./pieces";
+it("creates two beams and exact purlins with square cuts",()=>{const p={...DEFAULT_PROJECT_DEFINITION.parameters,purlinCount:1,purlins:[{id:"p",positionMm:2000,manual:false}],profiles:{beam:"80x40",purlin:"40x40"}}; const pieces=createRoofPieces(p,Math.hypot(3000,500)); expect(pieces).toHaveLength(3); expect(pieces[0]).toMatchObject({type:"beam",lengthMm:4000,cutStartDeg:90,cutEndDeg:90}); expect(pieces[2]).toMatchObject({type:"purlin",lengthMm:Math.hypot(3000,500)});});
+it("omits affected pieces for empty profiles",()=>expect(createRoofPieces(DEFAULT_PROJECT_DEFINITION.parameters,3000)).toEqual([]));

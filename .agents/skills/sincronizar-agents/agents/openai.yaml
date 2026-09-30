@@ -1,0 +1,7 @@
+interface:
+  display_name: "Sincronizar AGENTS.md"
+  short_description: "Alinea AGENTS.md con el estado real"
+  default_prompt: "Usa $sincronizar-agents para actualizar AGENTS.md con cambios mínimos."
+
+policy:
+  allow_implicit_invocation: false

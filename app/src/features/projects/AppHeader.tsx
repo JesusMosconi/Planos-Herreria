@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function AppHeader(){return <header className="border-b border-line bg-surface"><div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4"><Link href="/" className="font-bold">Diseñador para herrería</Link><nav aria-label="Principal"><Link href="/proyectos" className="rounded-md px-3 py-2 font-medium text-brand hover:bg-emerald-50">Mis proyectos</Link></nav></div></header>}
