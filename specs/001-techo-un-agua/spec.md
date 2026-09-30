@@ -12,16 +12,29 @@
 
 ### Session 2026-09-28
 
-- Q: ¿Las vigas son dos elementos paralelos al ancho, ubicados en los bordes alto y bajo, que
-  sostienen correas perpendiculares, y su longitud terminada equivale al ancho del techo? → A: Sí;
-  dos vigas paralelas al ancho, una alta y otra baja, de longitud terminada igual al ancho.
-- Q: ¿Las correas corren perpendiculares a las vigas, desde el borde alto hasta el bajo, se reparten
-  sobre el ancho y se cortan a 90° con una longitud real igual a la diagonal formada por profundidad
-  y diferencia de altura? → A: Sí.
+- Q: ¿Las vigas son dos elementos ubicados en los lados del ancho que siguen la pendiente desde el
+  borde alto hasta el bajo? → A: Sí; son exactamente dos, su longitud terminada es la diagonal
+  formada por la profundidad horizontal y el desnivel, sus cortes son de 90° y salen de barras de
+  compra de 4,50 m.
+- Q: ¿Las correas son perpendiculares a las vigas y paralelas al ancho? → A: Sí; cada una mide el
+  ancho del techo, tiene cortes de 90° y sus posiciones se distribuyen a lo largo de la profundidad
+  horizontal.
 - Q: ¿El sentido de caída debe indicar cuál de los dos bordes de profundidad queda bajo, dejando el
   opuesto alto, mostrando la vista lateral de alto a bajo, asignando esas alturas a las vigas y
   proponiendo la canaleta en el borde bajo? → A: Sí; la canaleta permanece editable y elegir otro
   lado genera un aviso no bloqueante.
+
+### Session 2026-09-30
+
+- Q: ¿Cambiar únicamente el desnivel debe conservar o descartar las posiciones manuales de las
+  correas? → A: Conservarlas.
+- Q: ¿Qué debe ocurrir cuando la diagonal de una viga supera la barra de compra de 4,50 m? → A:
+  Rechazar la geometría y explicar que la viga supera 4,50 m.
+- Q: ¿Desde qué borde se mide una posición manual de correa y qué sucede al invertir el sentido de
+  caída? → A: Se mide desde el borde frontal fijo y las posiciones se conservan.
+- Q: ¿Cómo deben tratarse los proyectos `schemaVersion: 1` creados con la geometría invertida? → A:
+  Migrarlos a `schemaVersion: 2`, descartar sus posiciones manuales de correas y regenerar el reparto
+  parejo sobre la profundidad horizontal.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -43,7 +56,8 @@ resumen de los valores ingresados y calculados sin usar edición por arrastre.
 2. **Given** un techo a un agua, **When** ingresa ancho, profundidad, diferencia de altura y sentido
    de caída, **Then** ve esas medidas y la pendiente calculada como ángulo o porcentaje.
 3. **Given** dimensiones válidas, **When** define una cantidad de correas, **Then** sus posiciones se
-   distribuyen de forma pareja y cada posición puede ajustarse por formulario.
+   distribuyen de forma pareja a lo largo de la profundidad horizontal, desde el borde alto hasta el
+   bajo, y cada posición puede ajustarse por formulario.
 4. **Given** un techo definido, **When** agrega apoyos, canaleta, bajadas y perfiles, **Then** el
    resumen refleja sus cantidades, posiciones, lados y descripciones.
 
@@ -124,10 +138,11 @@ resultados se comparan antes y después.
 
 **Acceptance Scenarios**:
 
-1. **Given** un proyecto completo, **When** se guarda y luego se abre, **Then** recupera exactamente
+1. **Given** un proyecto V2 completo, **When** se guarda y luego se abre, **Then** recupera exactamente
    sus datos, posiciones, advertencias, plano y lista derivada.
-2. **Given** un proyecto guardado, **When** se duplica, **Then** se crea otro proyecto editable con
-   los mismos datos iniciales y los cambios de la copia no afectan al original.
+2. **Given** un proyecto V2 guardado, **When** se duplica, **Then** se crea otro proyecto editable con
+   los mismos datos iniciales y los cambios de la copia no afectan al original. Si el origen es V1,
+   primero se aplica la migración definida en FR-017 y la copia comienza con su resultado V2.
 
 ---
 
@@ -153,8 +168,10 @@ pero siguen disponibles la edición y el guardado.
 
 - Ancho, profundidad o diferencia de altura iguales a cero o negativos no permiten completar un
   techo calculable y se explican al usuario.
-- Una diferencia de altura mayor que la dimensión recorrida por la caída se acepta solo con un aviso
-  de incoherencia claramente visible.
+- Una diferencia de altura mayor que la profundidad horizontal recorrida por la caída se acepta solo
+  con un aviso de incoherencia claramente visible.
+- Una diagonal de viga mayor que 4,50 m impide completar un techo calculable y se explica al usuario;
+  esta fase no propone empalmes ni combina varias barras.
 - Correas repetidas, fuera de la superficie o en posiciones no ordenadas generan avisos y conservan
   las posiciones ingresadas para que el usuario pueda corregirlas.
 - Cero correas o cero bajadas se representa explícitamente y no produce piezas fantasma.
@@ -169,8 +186,10 @@ pero siguen disponibles la edición y el guardado.
 - Toda dimensión lineal mayor que 12 m genera un aviso no bloqueante; una dimensión mayor que 30 m,
   un valor no numérico o un valor infinito se rechaza. La cantidad de correas debe ser un entero
   entre 0 y 100 inclusive.
-- Al modificar el ancho o la cantidad de correas se descartan las posiciones manuales anteriores,
-  se vuelve a generar el reparto parejo y se muestra un aviso visible de la redistribución.
+- Al modificar la profundidad o la cantidad de correas se descartan las posiciones manuales
+  anteriores, se vuelve a generar el reparto parejo y se muestra un aviso visible de la
+  redistribución. Al modificar únicamente el desnivel o invertir el sentido de caída, las posiciones
+  manuales se conservan porque se miden desde el borde frontal fijo de la vista superior.
 - Los valores mostrados no cambian de magnitud al guardar, abrir o duplicar.
 - Si una exportación no puede generarse, el proyecto permanece intacto y el usuario puede reintentar.
 
@@ -190,26 +209,34 @@ pero siguen disponibles la edición y el guardado.
   con una explicación y sin redondeo silencioso. Toda dimensión lineal mayor que 12 m DEBE generar
   un aviso no bloqueante y una dimensión mayor que 30 m DEBE rechazarse.
 - **FR-004**: El sistema DEBE registrar ancho, profundidad, diferencia de altura entre apoyos y
-  sentido de la caída. La profundidad DEBE representar la medida horizontal del techo entre el
-  borde alto y el bajo, no la longitud inclinada. El sentido elegido DEBE identificar el borde bajo
-  de la profundidad y el borde opuesto DEBE quedar alto. El sentido de caída DEBE admitir únicamente
-  los dos sentidos posibles sobre el eje de la profundidad: hacia el borde frontal o hacia el borde
-  posterior. El borde frontal DEBE corresponder al borde cercano representado en la parte inferior
-  de la vista superior; el borde posterior DEBE ser el borde opuesto, representado en la parte
-  superior. Esta referencia DEBE permanecer estable aunque cambie el tamaño o la orientación de la
-  pantalla. La pendiente DEBE calcularse sin pedirla como dato independiente.
+  sentido de la caída. El ancho DEBE representar la dimensión horizontal del techo perpendicular al
+  sentido de caída. La profundidad DEBE representar la distancia horizontal entre el borde alto y
+  el bajo, no la longitud inclinada. La diferencia de altura entre apoyos, también denominada
+  desnivel, junto con la profundidad DEBE definir la pendiente. El sentido elegido DEBE identificar
+  el borde bajo de la profundidad y el borde opuesto DEBE quedar alto. El sentido de caída DEBE
+  admitir únicamente los dos sentidos posibles sobre el eje de la profundidad: hacia el borde
+  frontal o hacia el borde posterior. El borde frontal DEBE corresponder al borde cercano
+  representado en la parte inferior de la vista superior; el borde posterior DEBE ser el borde
+  opuesto, representado en la parte superior. Esta referencia DEBE permanecer estable aunque cambie
+  el tamaño o la orientación de la pantalla. La pendiente DEBE calcularse sin pedirla como dato
+  independiente.
 - **FR-005**: El sistema DEBE mostrar la pendiente calculada como ángulo o porcentaje, dejando claro
   cuál de las dos representaciones se está usando. Todo ángulo mostrado DEBE usar un decimal; su
   cálculo y almacenamiento DEBEN conservar la precisión completa sin redondeo prematuro.
 - **FR-006**: El sistema DEBE permitir definir la cantidad de correas, distribuirlas inicialmente a
-  separación pareja y editar individualmente sus posiciones mediante formulario. Para `n` correas,
-  la primera y la última DEBEN ubicarse sobre los bordes del ancho, con `n-1` espacios iguales entre
-  ellas; cuando exista una sola correa, DEBE ubicarse centrada sobre el ancho. Las posiciones
-  inicialmente derivadas DEBEN conservar la precisión necesaria en milímetros para mantener esos
-  espacios iguales, sin redondeo prematuro. La cantidad de correas DEBE ser un entero entre 0 y 100
-  inclusive. Cualquier cambio del ancho o de la cantidad de correas DEBE descartar las posiciones
-  manuales anteriores, volver a generar el reparto parejo y mostrar un aviso visible de la
-  redistribución.
+  separación horizontal pareja a lo largo de la profundidad y editar individualmente sus posiciones
+  mediante formulario. Para `n` correas con `n >= 2`, la primera y la última DEBEN coincidir con el
+  borde alto y el borde bajo, con `n-1` espacios horizontales iguales entre ellas; la separación
+  DEBE calcularse como `profundidad / (n-1)`. Cuando exista una sola correa, DEBE ubicarse centrada
+  sobre la profundidad horizontal. Las posiciones inicialmente derivadas DEBEN conservar la
+  precisión necesaria en milímetros para mantener esos espacios iguales, sin redondeo prematuro. La
+  cantidad de correas DEBE ser un entero entre 0 y 100 inclusive. Cualquier cambio de la profundidad
+  o de la cantidad de correas DEBE descartar las posiciones manuales anteriores, volver a generar el
+  reparto parejo y mostrar un aviso visible de la redistribución. Un cambio únicamente del desnivel
+  DEBE conservar las posiciones manuales de las correas. Toda posición manual DEBE medirse
+  horizontalmente desde el borde frontal fijo definido en FR-004: `0` corresponde al borde frontal y
+  el valor de la profundidad corresponde al borde posterior. Al invertir el sentido de caída, el
+  sistema DEBE conservar esas posiciones y NO DEBE reflejarlas ni redistribuirlas.
 - **FR-007**: El sistema DEBE permitir ubicar apoyos o columnas por posición dentro o fuera de la
   superficie del techo.
 - **FR-008**: El sistema DEBE permitir indicar si existe canaleta, proponer el borde bajo como su
@@ -234,9 +261,15 @@ pero siguen disponibles la edición y el guardado.
 - **FR-016**: El sistema DEBE permitir marcar y desmarcar un proyecto como "medidas aproximadas / a
   confirmar en obra" y mostrar la marca en plano, exportación y lista de piezas.
 - **FR-017**: El sistema DEBE guardar y reabrir todos los datos editables del proyecto sin cambios y
-  regenerar resultados equivalentes.
+  regenerar resultados equivalentes. Como excepción de compatibilidad, al abrir un proyecto
+  `schemaVersion: 1` creado con la geometría invertida, el sistema DEBE migrarlo a
+  `schemaVersion: 2`, conservar los demás datos, descartar las posiciones manuales de correas,
+  regenerarlas a separación pareja sobre la profundidad horizontal y mostrar un aviso explícito de
+  la redistribución antes del siguiente guardado.
 - **FR-018**: El sistema DEBE duplicar un proyecto como una entidad independiente que conserve los
-  datos del original en el momento de la copia.
+  datos del original en el momento de la copia. Si el original es V1, el sistema DEBE aplicar primero
+  la migración definida en FR-017; la copia DEBE conservar exactamente el resultado V2 migrado y el
+  original DEBE permanecer sin modificaciones.
 - **FR-019**: El sistema DEBE detectar valores incoherentes conocidos, explicar el dato afectado y
   permitir continuar editando y guardando cuando el valor siga siendo interpretable.
 - **FR-020**: La edición del techo en esta fase DEBE realizarse solo por formulario; no debe existir
@@ -248,17 +281,20 @@ pero siguen disponibles la edición y el guardado.
   cada diferencia encontrada y su aceptación o corrección por el herrero.
 - **FR-023**: El caso de referencia NO DEBE convertirse en criterio definitivo de aceptación hasta
   que el herrero confirme las cifras dudosas del dibujo original y el significado de cada pieza.
-- **FR-024**: Cada techo DEBE incluir dos vigas paralelas al ancho: una en el borde alto y otra en el
-  borde bajo. Cada viga DEBE tener como longitud terminada el ancho del techo y sostener las correas
-  perpendiculares a ellas. Ambos cortes de cada viga DEBEN ser de 90°.
-- **FR-025**: Las correas DEBEN correr perpendiculares a las vigas, desde el borde alto hasta el bajo,
-  y distribuirse sobre el ancho. Para `n` correas, la primera y la última DEBEN coincidir con los
-  bordes del ancho y formar `n-1` espacios iguales; una única correa DEBE quedar centrada. Su longitud
-  exacta DEBE ser la diagonal formada por la profundidad y la diferencia de altura, y ambos cortes
-  DEBEN ser de 90°.
-- **FR-026**: La vista lateral DEBE representar la profundidad desde el borde alto hasta el bajo. La
-  viga del borde elegido como sentido de caída DEBE ser la viga baja y la del borde opuesto DEBE ser
-  la viga alta.
+- **FR-024**: Cada techo DEBE incluir exactamente dos vigas, una en cada lado del ancho. Ambas DEBEN
+  seguir la pendiente desde el borde alto hasta el bajo y tener como longitud terminada la diagonal
+  calculada con la profundidad horizontal y el desnivel. Ambos cortes de cada viga DEBEN ser de 90°
+  y cada viga DEBE salir de una barra de compra de 4,50 m. Si la diagonal supera 4,50 m, el sistema
+  DEBE rechazar la geometría y explicar que la viga no puede obtenerse de una sola barra; no DEBE
+  proponer empalmes ni combinar varias barras en esta fase.
+- **FR-025**: Las correas DEBEN ser perpendiculares a las vigas y paralelas al ancho. Cada correa
+  DEBE tener como longitud terminada el ancho del techo y ambos cortes DEBEN ser de 90°. Para `n`
+  correas con `n >= 2`, la primera y la última DEBEN coincidir respectivamente con el borde alto y
+  el borde bajo y formar `n-1` espacios horizontales iguales a lo largo de la profundidad; una única
+  correa DEBE quedar centrada sobre la profundidad horizontal.
+- **FR-026**: La vista lateral DEBE representar la profundidad horizontal desde el borde alto hasta
+  el bajo, el desnivel entre ambos apoyos y la diagonal que determina la longitud de las vigas. Cada
+  una de las dos vigas DEBE tener un extremo alto y un extremo bajo conforme al sentido de caída.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -266,12 +302,13 @@ pero siguen disponibles la edición y el guardado.
   medidas aproximadas y datos necesarios para guardarlo, abrirlo y duplicarlo.
 - **Techo a un agua**: Definición editable de dimensiones, desnivel, sentido de caída, correas,
   apoyos, canaleta, bajadas y perfiles de correas y vigas.
-- **Correa**: Elemento estructural perpendicular a las vigas que recorre la pendiente desde el borde
-  alto hasta el bajo. Su posición sobre el ancho es ajustable, su longitud es la diagonal de la
-  profundidad y la diferencia de altura, y sus cortes son de 90°.
-- **Viga**: Elemento estructural paralelo al ancho. El techo contiene una viga en el borde alto y
-  otra en el borde bajo; ambas tienen una longitud terminada igual al ancho, sostienen las correas y
-  llevan dos cortes de 90°.
+- **Correa**: Elemento estructural perpendicular a las vigas y paralelo al ancho. Su posición sobre
+  la profundidad horizontal es ajustable y se mide desde el borde frontal fijo; su longitud
+  terminada es el ancho del techo y sus cortes son de 90°.
+- **Viga**: Elemento estructural que sigue la pendiente desde el borde alto hasta el bajo. El techo
+  contiene exactamente dos, una en cada lado del ancho; ambas tienen una longitud terminada igual a
+  la diagonal de la profundidad horizontal y el desnivel, llevan dos cortes de 90° y salen de barras
+  de compra de 4,50 m.
 - **Apoyo**: Punto colocado por el usuario que condiciona la representación y las validaciones. En
   esta fase su posición no implica una longitud fabricable si esta no puede derivarse de los datos.
 - **Elemento de desagüe**: Canaleta o bajada definida por lado, cantidad o posición para aparecer en
@@ -295,10 +332,13 @@ pero siguen disponibles la edición y el guardado.
   presenta una diferencia explicada y aceptada por el herrero. La comparación admite una diferencia
   máxima de 0,5 mm en longitudes y 0,05° en ángulos mostrados; cantidad, perfil y cortes nominales
   DEBEN coincidir exactamente.
-- **SC-004**: El 100 % de los proyectos de prueba guardados y reabiertos conserva todos sus datos
-  editables y produce un plano y una lista equivalentes a los anteriores al cierre.
-- **SC-005**: El 100 % de las copias de prueba comienza con los mismos datos que su original y puede
-  modificarse sin alterar ese original.
+- **SC-004**: El 100 % de los proyectos V2 de prueba guardados y reabiertos conserva todos sus datos
+  editables y produce un plano y una lista equivalentes a los anteriores al cierre. El 100 % de los
+  proyectos V1 de prueba conserva todos los datos no afectados, redistribuye las correas según
+  FR-017 y muestra el aviso correspondiente.
+- **SC-005**: El 100 % de las copias de proyectos V2 comienza con los mismos datos que su original.
+  El 100 % de las copias con origen V1 comienza con el resultado de la migración definida en FR-017.
+  En ambos casos, la copia puede modificarse sin alterar el original.
 - **SC-006**: El 100 % de los casos incoherentes definidos en esta especificación muestra un aviso
   asociado al dato y permite seguir editando y guardando sin fallos ni pérdida de información.
 - **SC-007**: El 100 % de los planos y listas de proyectos marcados muestra la advertencia de medidas
@@ -312,19 +352,18 @@ pero siguen disponibles la edición y el guardado.
   inclinada. El sentido de caída identifica el borde bajo de la profundidad; el borde opuesto queda
   alto. La vista lateral recorre ambos bordes de alto a bajo, y la canaleta se propone en el borde
   bajo sin impedir que el herrero seleccione otro lado.
-- El techo lleva exactamente dos vigas paralelas al ancho, una alta y una baja, cuya longitud
-  terminada coincide con el ancho. Que los dos tubos del caso de referencia correspondan a estas
-  vigas y que 4,5 m sea su longitud de compra siguen pendientes de confirmación con el herrero.
+- El techo lleva exactamente dos vigas, una en cada lado del ancho, que recorren la pendiente desde
+  el borde alto hasta el bajo. Su longitud terminada es la diagonal calculada con la profundidad
+  horizontal y el desnivel, y cada una sale de una barra de compra de 4,50 m.
 - Los apoyos o columnas se definen por posición. Solo integran la lista de piezas cuando su longitud
   exacta y cortes pueden derivarse de los parámetros disponibles; no se inventan alturas faltantes.
 - Canaletas y bajadas se representan en el plano, pero se consideran accesorios y quedan fuera de la
   lista de piezas estructurales de esta fase.
 - La exportación debe producir al menos un documento portátil apto para compartir o imprimir; el
   formato concreto se decidirá durante la planificación sin cambiar el resultado funcional.
-- El caso de cuaderno de aproximadamente 4,15 × 2,90 m, perfil 40×80×1,6, seis correas cercanas a
-  3 m y dos tubos cercanos a 4,5 m es evidencia provisional, no una verdad técnica, hasta ser
-  confirmado con el herrero.
+- El caso de referencia usa un ancho de 2,90 m, una profundidad horizontal de 4,15 m y un desnivel
+  provisional de 0,50 m. De ello se derivan dos vigas de aproximadamente 4,18 m, seis correas de
+  2,90 m y una separación horizontal entre correas de 0,83 m.
 - Quedan pendientes de confirmación con el herrero, sin bloquear esta especificación: las medidas
-  exactas 4,15 × 2,90 m; el perfil 40×80×1,6; la cantidad de seis correas; si 3 m y 4,5 m son
-  longitudes de compra o terminadas; si 83 cm describe la separación; y si los dos tubos de 4,5 m
-  corresponden efectivamente a las dos vigas.
+  exactas de 2,90 m de ancho y 4,15 m de profundidad; el desnivel provisional de 0,50 m; el perfil
+  40×80×1,6; y la cantidad de seis correas.

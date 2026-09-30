@@ -1,6 +1,6 @@
 # Implementation Plan: Fase 1 - Núcleo y techo a un agua
 
-**Branch**: `001-techo-un-agua` | **Date**: 2026-09-29 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-techo-un-agua` | **Date**: 2026-09-30 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `/specs/001-techo-un-agua/spec.md`
 
@@ -21,7 +21,7 @@ estable de Next.js fijada por el lockfile al inicializar `/app`
 adaptador Prisma para Neon y PDFKit
 
 **Storage**: PostgreSQL en Neon; metadatos relacionales de `Proyecto` y definición paramétrica
-versionada en `jsonb`; ningún resultado derivado persistido
+`ProjectDefinitionV2` versionada en `jsonb`; ningún resultado derivado persistido
 
 **Testing**: Vitest en entorno Node para dominio y contratos, React Testing Library para formularios,
 integración contra una base de prueba y Playwright para los recorridos completos
@@ -39,8 +39,8 @@ milímetro cuando una operación geométrica exacta lo requiera; entradas de UI 
 y coma o punto decimal, sin separador de miles, espacios internos, signo `+`, valores no numéricos ni
 infinitos; dimensiones lineales con aviso sobre 12.000 mm y bloqueo sobre 30.000 mm; cantidad de
 correas entera entre 0 y 100; cálculo determinista; motor sin React, DOM, navegador, Next.js ni
-Prisma; edición solo por formulario; PDF compartible o imprimible; avisos incoherentes no bloquean
-guardado
+Prisma; diagonal de viga no mayor que 4.500 mm; edición solo por formulario; PDF compartible o
+imprimible; avisos incoherentes no bloquean guardado
 
 **Scale/Scope**: Un herrero, un tipo de estructura, tres rutas principales, seis historias, 26
 requisitos, dos vistas técnicas y decenas o pocos cientos de proyectos por instalación
@@ -49,7 +49,7 @@ requisitos, dos vistas técnicas y decenas o pocos cientos de proyectos por inst
 
 *GATE: Passed before Phase 0 research. Passed again after Phase 1 design.*
 
-- **Modelo único**: `ProjectDefinitionV1` es la única fuente técnica; derivados no se guardan.
+- **Modelo único**: `ProjectDefinitionV2` es la única fuente técnica; derivados no se guardan.
 - **Precisión**: fórmulas puras en mm, probadas contra cálculos manuales; exportadores consumen el
   mismo resultado.
 - **Herrero primero**: UI convierte coma o punto decimal a mm en límites probados; no incorpora CAD
@@ -132,35 +132,42 @@ Actions; la ruta HTTP especial genera descargas porque no hay una API pública e
 UI (metros con coma o punto) → mm → Zod → registro central → módulo `techo-un-agua` → geometría semántica,
 cotas, piezas y avisos → UI/Maker.js/exportadores. La diagonal es
 `hypot(profundidadMm, diferenciaAlturaMm)`; pendiente `% = desnivel / profundidad * 100`; ángulo =
-`atan2(desnivel, profundidad)`. Para `n > 1`, posiciones `i * anchoMm / (n - 1)` conservadas sin
-redondeo prematuro, aunque resulten fraccionarias en mm; una correa queda en `anchoMm / 2`; cero
-produce ninguna. Los parámetros ingresados por el usuario tienen resolución de 1 mm, pero los
-resultados derivados mantienen la precisión necesaria para preservar la geometría determinista. El
-ángulo conserva la precisión completa y se presenta con un decimal. Cambiar el ancho o la cantidad
-de correas descarta las posiciones manuales, vuelve a generar el reparto parejo y produce un aviso
-visible.
+`atan2(desnivel, profundidad)`. Las dos vigas recorren esa diagonal, una en cada lado del ancho, y
+cada correa mide el ancho. Para `n > 1`, las posiciones horizontales de las correas son
+`i * profundidadMm / (n - 1)`, conservadas sin redondeo prematuro aunque resulten fraccionarias en
+mm; una correa queda en `profundidadMm / 2`; cero produce ninguna. Las posiciones manuales se miden
+desde el borde frontal fijo: cambiar profundidad o cantidad las descarta y redistribuye; cambiar
+solo el desnivel o el sentido de caída las conserva sin reflejarlas. Los parámetros ingresados por
+el usuario tienen resolución de 1 mm, pero los resultados derivados mantienen la precisión necesaria
+para preservar la geometría determinista. El ángulo conserva la precisión completa y se presenta con
+un decimal. Una diagonal mayor que 4.500 mm es un error bloqueante porque esta fase no admite
+empalmes ni varias barras para una viga.
 
 ### Persistencia y compatibilidad
 
 `Proyecto` guarda metadatos consultables y `definition` JSONB. JSON y columna repiten
-`schemaVersion` mediante un único constructor. La versión actual se valida, una anterior soportada se
-migra con funciones puras y una futura se rechaza sin sobrescribir. Guardar y duplicar validan en
-servidor. Duplicar usa una transacción corta y crea una identidad independiente con
-`duplicatedFromId`.
+`schemaVersion` mediante un único constructor. La versión actual es V2. Al leer V1, una migración
+pura conserva los demás datos, descarta posiciones manuales de correas cuya coordenada usaba la
+geometría invertida y genera el reparto parejo sobre la profundidad horizontal; el editor muestra el
+aviso de redistribución antes del siguiente guardado. Una versión futura se rechaza sin sobrescribir.
+Guardar y duplicar validan V2 en servidor. Duplicar usa una transacción corta y crea una identidad
+independiente con `duplicatedFromId`.
 
 ### Plano y exportación
 
 El dominio produce `TechnicalDrawing` independiente de Maker.js. El adaptador crea modelos 2D en mm
 y capas `estructura`, `cubierta`, `apoyos`, `desague`, `cotas`, `textos`. Vista superior: vigas
-paralelas al ancho, correas perpendiculares sobre profundidad. Vista lateral: profundidad horizontal,
-desnivel y pendiente. PDF es obligatorio; SVG y DXF reutilizan el modelo. PDF escala un clon a A4
-apaisado sin cambiar etiquetas ni medidas.
+desde el borde alto al bajo en los dos lados del ancho y correas paralelas al ancho ubicadas sobre la
+profundidad horizontal. Vista lateral: profundidad horizontal, desnivel y diagonal de las vigas. PDF
+es obligatorio; SVG y DXF reutilizan el modelo. PDF escala un clon a A4 apaisado sin cambiar
+etiquetas ni medidas.
 
 ### Avisos y errores
 
-Dimensiones no positivas o contrato incompleto impiden el derivado imposible. Incoherencias
-interpretables producen avisos y permiten editar/guardar. Perfil vacío excluye solo piezas afectadas.
-Un fallo de persistencia o exportación nunca borra el modelo en edición.
+Dimensiones no positivas, diagonal de viga mayor que 4.500 mm o contrato incompleto impiden el
+derivado imposible. Incoherencias interpretables producen avisos y permiten editar/guardar. Perfil
+vacío excluye solo piezas afectadas. Un fallo de persistencia o exportación nunca borra el modelo en
+edición.
 
 ### Referencias visuales
 

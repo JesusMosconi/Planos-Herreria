@@ -47,14 +47,17 @@ o IndexedDB crea sincronización fuera de alcance.
 
 ## 4. Versionado y duplicación
 
-**Decision**: Zod valida lectura/escritura. La versión actual se valida, anteriores se migran con
-funciones puras y futuras se rechazan sin mutar. Duplicación en transacción corta read/create.
+**Decision**: Zod valida lectura/escritura. La versión actual es V2. V1 se migra de forma pura:
+conserva los datos no afectados, descarta posiciones manuales de correas basadas en la geometría
+invertida y las redistribuye de forma pareja sobre la profundidad horizontal, dejando un aviso
+visible. Versiones futuras se rechazan sin mutar. Duplicación en transacción corta read/create.
 
 **Rationale**: JSONB no garantiza dominio; migraciones puras explicitan compatibilidad; transacción
 conserva copia coherente.
 
-**Alternatives considered**: TypeScript solo no protege persistencia; migrar documentos en bloque
-aumenta riesgo; leer/crear separado debilita atomicidad.
+**Alternatives considered**: TypeScript solo no protege persistencia; reinterpretar V1 en silencio
+cambiaría su significado; bloquear toda lectura V1 impediría recuperar los demás datos; migrar
+documentos en bloque aumenta riesgo; leer/crear separado debilita atomicidad.
 
 **Sources**: [Prisma transactions](https://www.prisma.io/docs/orm/prisma-client/queries/transactions),
 [Migrate workflows](https://www.prisma.io/docs/orm/prisma-migrate/workflows/development-and-production).
@@ -74,6 +77,22 @@ interacción futura; guardar exportaciones viola derivación.
 [Maker exporting](https://maker.js.org/docs/exporting/),
 [Exporter API](https://maker.js.org/docs/api/modules/makerjs.exporter.html),
 [PDFKit](https://pdfkit.org/docs/getting_started.html).
+
+### Contrato geométrico del techo a un agua
+
+**Decision**: El ancho es transversal a la caída y la profundidad es la distancia horizontal entre
+los bordes alto y bajo. Dos vigas, una en cada lado del ancho, recorren la diagonal
+`hypot(profundidad, desnivel)`; las correas son perpendiculares a ellas, paralelas al ancho y miden el
+ancho. Sus posiciones horizontales se reparten sobre la profundidad y se miden desde el borde
+frontal fijo. Cada viga debe poder obtenerse de una barra de 4.500 mm; una diagonal mayor se rechaza
+sin proponer empalmes.
+
+**Rationale**: Reproduce la definición confirmada por el herrero, mantiene estable la coordenada de
+edición al invertir la caída y evita que el plan vuelva a intercambiar vigas y correas.
+
+**Alternatives considered**: Vigas paralelas al ancho y correas sobre la diagonal fueron descartadas
+por invertir los elementos; medir desde el borde alto reflejaría posiciones al invertir la caída;
+permitir empalmes ampliaría el alcance estructural de la fase.
 
 ## 6. Pruebas y despliegue
 

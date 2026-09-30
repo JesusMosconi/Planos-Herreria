@@ -12,11 +12,15 @@ permanece en UI hasta ser válido. Decisiones discretas usan controles accesible
 
 Las dimensiones mayores que 12 m y menores o iguales que 30 m producen un aviso no bloqueante. La
 cantidad de correas admite enteros de 0 a 100. El ángulo se presenta con un decimal, aunque el modelo
-conserva precisión completa. Al cambiar ancho o cantidad de correas, la UI sustituye las posiciones
-manuales por el reparto parejo y muestra un aviso visible de la redistribución.
+conserva precisión completa. Las posiciones manuales de correas se miden horizontalmente desde el
+borde frontal fijo. Al cambiar profundidad o cantidad de correas, la UI sustituye esas posiciones por
+el reparto parejo y muestra un aviso visible; al cambiar solo desnivel o sentido de caída, las
+conserva sin reflejarlas. Una diagonal de viga mayor que 4,50 m se rechaza con una explicación y sin
+proponer empalmes.
 
 Mostrar unidad y coma sin cambiar magnitud al reabrir; identificar porcentaje/ángulo; avisos junto al
-dato sin deshabilitar Guardar; advertencia aproximada en plano/lista; vigas siempre paralelas al ancho
-y correas perpendiculares. Debe funcionar con teclado/táctil y móvil sin depender de hover.
+dato sin deshabilitar Guardar; advertencia aproximada en plano/lista; dos vigas recorriendo la
+pendiente sobre los lados del ancho y correas perpendiculares a ellas, paralelas al ancho. Debe
+funcionar con teclado/táctil y móvil sin depender de hover.
 
 Las capturas de `../design/` son orientación visual no normativa.

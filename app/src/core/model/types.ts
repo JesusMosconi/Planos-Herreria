@@ -6,7 +6,7 @@ export interface SupportParam { readonly id: string; readonly xMm: number; reado
 export interface DownspoutParam { readonly id: string; readonly positionMm: number; readonly edge: RoofEdge }
 export interface DrainageParam { readonly enabled: boolean; readonly edge: RoofEdge; readonly downspouts: readonly DownspoutParam[] }
 export interface Profiles { readonly beam: string; readonly purlin: string }
-export interface TechoUnAguaParametersV1 {
+export interface TechoUnAguaParameters {
   readonly widthMm: number;
   readonly horizontalDepthMm: number;
   readonly heightDifferenceMm: number;
@@ -18,6 +18,8 @@ export interface TechoUnAguaParametersV1 {
   readonly profiles: Profiles;
   readonly purlinPositionsRedistributed?: boolean;
 }
+export type TechoUnAguaParametersV1 = TechoUnAguaParameters;
+export type TechoUnAguaParametersV2 = TechoUnAguaParameters;
 export interface ProjectDefinitionV1 {
   readonly schemaVersion: 1;
   readonly structureType: "techo-un-agua";
@@ -27,6 +29,17 @@ export interface ProjectDefinitionV1 {
   readonly approximateMeasurements: boolean;
   readonly parameters: TechoUnAguaParametersV1;
 }
+export interface ProjectDefinitionV2 {
+  readonly schemaVersion: 2;
+  readonly structureType: "techo-un-agua";
+  readonly name: string;
+  readonly client: string;
+  readonly notes: string;
+  readonly approximateMeasurements: boolean;
+  readonly parameters: TechoUnAguaParametersV2;
+}
+export type ProjectDefinition = ProjectDefinitionV2;
+export type ProjectMigrationCause = "purlin-positions-redistributed";
 export interface Warning { readonly code: string; readonly path: string; readonly message: string; readonly severity: "warning" }
 export interface StructuralPiece { readonly type: "beam" | "purlin"; readonly lengthMm: number; readonly profile: string; readonly cutStartDeg: 90; readonly cutEndDeg: 90 }
 export interface GroupedPiece extends StructuralPiece { readonly quantity: number }

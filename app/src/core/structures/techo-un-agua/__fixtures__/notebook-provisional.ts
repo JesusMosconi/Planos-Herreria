@@ -1,1 +1,1 @@
-export const NOTEBOOK_PROVISIONAL={confirmed:false,note:"Comparación informativa; no usar como aceptación hasta confirmación del herrero.",widthMm:4150,horizontalDepthMm:2900,purlinCount:6,profile:"40×80×1,6",uncertainPurchasedLengthsMm:[3000,4500]} as const;
+export const NOTEBOOK_PROVISIONAL={confirmed:false,note:"Comparación informativa; no usar como aceptación hasta confirmación del herrero.",widthMm:2900,horizontalDepthMm:4150,purlinCount:6,profile:"40×80×1,6",uncertainPurchasedLengthsMm:[3000,4500]} as const;

@@ -1,7 +1,7 @@
-import type { DrawingLine, DrawingText, ProjectDefinitionV1, TechnicalDrawing } from "@/core/model/types";
+import type { DrawingLine, DrawingText, ProjectDefinitionV2, TechnicalDrawing } from "@/core/model/types";
 import { formatMillimetersAsMeters } from "@/core/units/metric";
 export const APPROXIMATE_LABEL="Medidas aproximadas / a confirmar en obra";
-export function createTechnicalDrawing(definition: ProjectDefinitionV1): TechnicalDrawing {
+export function createTechnicalDrawing(definition: ProjectDefinitionV2): TechnicalDrawing {
   const p=definition.parameters; const lines:DrawingLine[]=[]; const texts:DrawingText[]=[];
   const line=(id:string,layer:DrawingLine["layer"],from:readonly[number,number],to:readonly[number,number])=>lines.push({id,layer,from,to});
   line("cover-top","cubierta",[0,0],[p.widthMm,0]); line("cover-right","cubierta",[p.widthMm,0],[p.widthMm,p.horizontalDepthMm]); line("cover-bottom","cubierta",[p.widthMm,p.horizontalDepthMm],[0,p.horizontalDepthMm]); line("cover-left","cubierta",[0,p.horizontalDepthMm],[0,0]);
